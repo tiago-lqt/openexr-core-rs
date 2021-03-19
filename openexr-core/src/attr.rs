@@ -103,7 +103,7 @@ impl Reader {
             unsafe { sys::exr_attr_count(self.inner() as *mut _, part_index) };
 
         if count < 0 {
-            sys::exr_ERROR_CODES_t(-count as u32).ok(0i32)
+            sys::exr_ERROR_CODES_t(-count).ok(0i32)
         } else {
             Ok(count)
         }

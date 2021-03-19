@@ -30,7 +30,7 @@ pub fn start_read(filename: &str) -> Result<Reader> {
             &mut file,
             filename.as_ptr(),
             None,
-        ) as u32)
+        ))
         .ok(Reader { file })
     }
 }

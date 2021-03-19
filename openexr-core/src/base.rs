@@ -123,7 +123,7 @@ pub trait File {
                 part,
                 &mut levelsx,
                 &mut levelsy,
-            ) as u32)
+            ))
             .ok((levelsx, levelsy))
         }
     }
@@ -152,7 +152,7 @@ pub trait File {
                 levely,
                 &mut tilew,
                 &mut tileh,
-            ) as u32)
+            ))
             .ok((tilew, tileh))
         }
     }
