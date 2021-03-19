@@ -1,4 +1,4 @@
-use openexr_sys as sys;
+use openexr_core_sys as sys;
 
 pub use sys::Error;
 type Result<T, E = Error> = std::result::Result<T, E>;

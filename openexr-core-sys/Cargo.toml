@@ -1,11 +1,11 @@
 [package]
-name = "openexr-sys"
+name = "openexr-core-sys"
 version = "0.1.0"
 edition = "2018"
 build = "build.rs"
 
 [lib]
-name = "openexr_sys"
+name = "openexr_core_sys"
 path = "src/lib.rs"
 
 [build-dependencies]

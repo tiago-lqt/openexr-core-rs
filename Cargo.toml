@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    'openexr-sys',
-    'openexr-core',
+    'openexr-core-sys',
+    'openexr-core-rs',
 ]
