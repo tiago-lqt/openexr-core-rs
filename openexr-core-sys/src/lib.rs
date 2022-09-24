@@ -3,182 +3,190 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
+use thiserror::Error;
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-impl exr_ERROR_CODES_t {
-    pub fn ok<T>(&self, val: T) -> Result<T, Error> {
+impl exr_error_code_t {
+    pub fn ok<T>(&self, value: T) -> Result<T, Error> {
         match *self {
-            exr_ERROR_CODES_t::EXR_ERR_SUCCESS => Ok(val),
-            exr_ERROR_CODES_t::EXR_ERR_OUT_OF_MEMORY => Err(Error::OutOfMemory),
-            exr_ERROR_CODES_t::EXR_ERR_INVALID_ARGUMENT => {
-                Err(Error::InvalidArgument)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_FILE_ACCESS => Err(Error::FileAccess),
-            exr_ERROR_CODES_t::EXR_ERR_FILE_BAD_HEADER => {
-                Err(Error::FileBadHeader)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_NOT_OPEN_READ => Err(Error::NotOpenRead),
-            exr_ERROR_CODES_t::EXR_ERR_NOT_OPEN_WRITE => {
-                Err(Error::NotOpenWrite)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_READ_IO => Err(Error::ReadIo),
-            exr_ERROR_CODES_t::EXR_ERR_WRITE_IO => Err(Error::WriteIo),
-            exr_ERROR_CODES_t::EXR_ERR_NAME_TOO_LONG => Err(Error::NameTooLong),
-            exr_ERROR_CODES_t::EXR_ERR_MISSING_REQ_ATTR => {
-                Err(Error::MissingReqAttr)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_INVALID_ATTR => Err(Error::InvalidAttr),
-            exr_ERROR_CODES_t::EXR_ERR_BAD_CHUNK_DATA => {
-                Err(Error::BadChunkData)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_TYPE_MISMATCH => {
-                Err(Error::TypeMismatch)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_SIZE_MISMATCH => {
-                Err(Error::SizeMismatch)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_SCAN_TILE_MIXEDAPI => {
-                Err(Error::ScanTileMixedApi)
-            }
-            exr_ERROR_CODES_t::EXR_ERR_TILE_SCAN_MIXEDAPI => {
-                Err(Error::TileScanMixedApi)
-            }
-            _ => Err(Error::Unknown),
+            exr_error_code_t::EXR_ERR_SUCCESS => Ok(value),
+            code => Err(code.into()),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+impl From<exr_error_code_t> for Error {
+    fn from(error_code: exr_error_code_t) -> Self {
+        match error_code {
+            exr_error_code_t::EXR_ERR_OUT_OF_MEMORY => Error::OutOfMemory,
+            exr_error_code_t::EXR_ERR_MISSING_CONTEXT_ARG => Error::MissingContextArgument,
+            exr_error_code_t::EXR_ERR_INVALID_ARGUMENT => Error::InvalidArgument,
+            exr_error_code_t::EXR_ERR_ARGUMENT_OUT_OF_RANGE => Error::ArgumentOutOfRange,
+            exr_error_code_t::EXR_ERR_FILE_ACCESS => Error::FileAccess,
+            // exr_error_code_t::EXR_ERR_FILE_BAD_HEADER => Error::BadChunkData,
+            exr_error_code_t::EXR_ERR_NOT_OPEN_READ => Error::NotOpenRead,
+            exr_error_code_t::EXR_ERR_NOT_OPEN_WRITE => Error::NotOpenWrite,
+            exr_error_code_t::EXR_ERR_HEADER_NOT_WRITTEN => Error::HeaderNotWritten,
+            exr_error_code_t::EXR_ERR_READ_IO => Error::ReadIo,
+            exr_error_code_t::EXR_ERR_WRITE_IO => Error::WriteIo,
+            exr_error_code_t::EXR_ERR_NAME_TOO_LONG => Error::NameTooLong,
+            exr_error_code_t::EXR_ERR_MISSING_REQ_ATTR => Error::MissingReqAttr,
+            exr_error_code_t::EXR_ERR_INVALID_ATTR => Error::InvalidAttr,
+            exr_error_code_t::EXR_ERR_NO_ATTR_BY_NAME => Error::NoAttributeByName,
+            // exr_error_code_t::EXR_ERR_BAD_CHUNK_DATA => Error::BadChunkData,
+            exr_error_code_t::EXR_ERR_ATTR_TYPE_MISMATCH => Error::AttributeTypeMismatch,
+            exr_error_code_t::EXR_ERR_ATTR_SIZE_MISMATCH => Error::AttributeSizeMismatch,
+            exr_error_code_t::EXR_ERR_SCAN_TILE_MIXEDAPI => Error::ScanTileMixedApi,
+            exr_error_code_t::EXR_ERR_TILE_SCAN_MIXEDAPI => Error::TileScanMixedApi,
+            exr_error_code_t::EXR_ERR_MODIFY_SIZE_CHANGE => Error::ModifySizeChange,
+            exr_error_code_t::EXR_ERR_ALREADY_WROTE_ATTRS => Error::AlreadyWroteAttributes,
+            // exr_error_code_t::EXR_ERR_PART_NOT_READY => Error::PartNotReady,
+            // exr_error_code_t::EXR_ERR_CHUNK_NOT_READY => Error::ChunkNotReady,
+            exr_error_code_t::EXR_ERR_USE_SCAN_DEEP_WRITE => Error::UseScanDeepWrite,
+            exr_error_code_t::EXR_ERR_USE_TILE_DEEP_WRITE => Error::UseTileDeepWrite,
+            exr_error_code_t::EXR_ERR_USE_SCAN_NONDEEP_WRITE => Error::UseScanNonDeepWrite,
+            exr_error_code_t::EXR_ERR_USE_TILE_NONDEEP_WRITE => Error::UseTileNonDeepWrite,
+            exr_error_code_t::EXR_ERR_UNKNOWN => Error::Unknown,
+            _ => Error::Unknown,
+        }
+    }
+}
+
+impl From<Error> for exr_error_code_t {
+    fn from(error: Error) -> Self {
+        match error {
+            Error::OutOfMemory => exr_error_code_t::EXR_ERR_OUT_OF_MEMORY,
+            Error::MissingContextArgument => exr_error_code_t::EXR_ERR_MISSING_CONTEXT_ARG,
+            Error::InvalidArgument => exr_error_code_t::EXR_ERR_INVALID_ARGUMENT,
+            Error::ArgumentOutOfRange => exr_error_code_t::EXR_ERR_ARGUMENT_OUT_OF_RANGE,
+            Error::FileAccess => exr_error_code_t::EXR_ERR_FILE_ACCESS,
+            Error::FileBadHeader => exr_error_code_t::EXR_ERR_FILE_BAD_HEADER,
+            Error::NotOpenRead => exr_error_code_t::EXR_ERR_NOT_OPEN_READ,
+            Error::NotOpenWrite => exr_error_code_t::EXR_ERR_NOT_OPEN_WRITE,
+            Error::HeaderNotWritten => exr_error_code_t::EXR_ERR_HEADER_NOT_WRITTEN,
+            Error::ReadIo => exr_error_code_t::EXR_ERR_READ_IO,
+            Error::WriteIo => exr_error_code_t::EXR_ERR_WRITE_IO,
+            Error::NameTooLong => exr_error_code_t::EXR_ERR_NAME_TOO_LONG,
+            Error::MissingReqAttr => exr_error_code_t::EXR_ERR_MISSING_REQ_ATTR,
+            Error::InvalidAttr => exr_error_code_t::EXR_ERR_INVALID_ATTR,
+            Error::NoAttributeByName => exr_error_code_t::EXR_ERR_NO_ATTR_BY_NAME,
+            // Error::BadChunkData => exr_error_code_t::EXR_ERR_BAD_CHUNK_DATA,
+            Error::AttributeTypeMismatch => exr_error_code_t::EXR_ERR_ATTR_TYPE_MISMATCH,
+            Error::AttributeSizeMismatch => exr_error_code_t::EXR_ERR_ATTR_SIZE_MISMATCH,
+            Error::ScanTileMixedApi => exr_error_code_t::EXR_ERR_SCAN_TILE_MIXEDAPI,
+            Error::TileScanMixedApi => exr_error_code_t::EXR_ERR_TILE_SCAN_MIXEDAPI,
+            Error::ModifySizeChange => exr_error_code_t::EXR_ERR_MODIFY_SIZE_CHANGE,
+            Error::AlreadyWroteAttributes => exr_error_code_t::EXR_ERR_ALREADY_WROTE_ATTRS,
+            // Error::PartNotReady => exr_error_code_t::EXR_ERR_PART_NOT_READY,
+            // Error::ChunkNotReady => exr_error_code_t::EXR_ERR_CHUNK_NOT_READY,
+            Error::UseScanDeepWrite => exr_error_code_t::EXR_ERR_USE_SCAN_DEEP_WRITE,
+            Error::UseTileDeepWrite => exr_error_code_t::EXR_ERR_USE_TILE_DEEP_WRITE,
+            Error::UseScanNonDeepWrite => exr_error_code_t::EXR_ERR_USE_SCAN_NONDEEP_WRITE,
+            Error::UseTileNonDeepWrite => exr_error_code_t::EXR_ERR_USE_TILE_NONDEEP_WRITE,
+            Error::Unknown => exr_error_code_t::EXR_ERR_UNKNOWN,
+        }
+    }
+}
+
+impl From<Error> for exr_result_t {
+    fn from(error: Error) -> Self {
+        let error_code: exr_error_code_t = error.into();
+        error_code.0
+    }
+}
+
+pub type SysResult<T> = std::result::Result<T, Error>;
+
+#[derive(Error, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Error {
-    OutOfMemory,
-    InvalidArgument,
-    FileAccess,
-    FileBadHeader,
-    NotOpenRead,
-    NotOpenWrite,
-    ReadIo,
-    WriteIo,
-    NameTooLong,
-    MissingReqAttr,
-    InvalidAttr,
-    BadChunkData,
-    TypeMismatch,
-    SizeMismatch,
-    ScanTileMixedApi,
-    TileScanMixedApi,
+    #[error("Unable to allocate memory")]
+    OutOfMemory, // EXR_ERR_OUT_OF_MEMORY,
+    #[error("Context argument to function is not valid")]
+    MissingContextArgument, // EXR_ERR_MISSING_CONTEXT_ARG,
+    #[error("Invalid argument to function")]
+    InvalidArgument, // EXR_ERR_INVALID_ARGUMENT,
+    #[error("Argument to function out of valid range")]
+    ArgumentOutOfRange, // EXR_ERR_ARGUMENT_OUT_OF_RANGE,
+    #[error("Unable to open file (path does not exist or permission denied")]
+    FileAccess, // EXR_ERR_FILE_ACCESS,
+    #[error("File is not an OpenEXR file or has a bad header")]
+    FileBadHeader, // EXR_ERR_FILE_BAD_HEADER,
+    #[error("File not opened for read")]
+    NotOpenRead, // EXR_ERR_NOT_OPEN_READ,
+    #[error("File not opened for write")]
+    NotOpenWrite, // EXR_ERR_NOT_OPEN_WRITE,
+    #[error("File opened for write, but header not yet written")]
+    HeaderNotWritten, // EXR_ERR_HEADER_NOT_WRITTEN,
+    #[error("Error reading from stream")]
+    ReadIo, // EXR_ERR_READ_IO,
+    #[error("Error writing to stream")]
+    WriteIo, // EXR_ERR_WRITE_IO,
+    #[error("Text too long for file flags")]
+    NameTooLong, // EXR_ERR_NAME_TOO_LONG,
+    #[error("Missing required attribute in part header")]
+    MissingReqAttr, // EXR_ERR_MISSING_REQ_ATTR,
+    #[error("Invalid attribute in part header")]
+    InvalidAttr, // EXR_ERR_INVALID_ATTR,
+    #[error("No attribute by that name in part header")]
+    NoAttributeByName, // EXR_ERR_NO_ATTR_BY_NAME,
+    #[error("Attribute type mismatch")]
+    AttributeTypeMismatch, // EXR_ERR_ATTR_TYPE_MISMATCH,
+    #[error("Attribute type vs. size mismatch")]
+    AttributeSizeMismatch, // EXR_ERR_ATTR_SIZE_MISMATCH,
+    #[error("Attempt to use a scanline accessor function for a tiled image")]
+    ScanTileMixedApi, // EXR_ERR_SCAN_TILE_MIXEDAPI,
+    #[error("Attempt to use a tiled accessor function for a scanline image")]
+    TileScanMixedApi, // EXR_ERR_TILE_SCAN_MIXEDAPI,
+    #[error("Attempt to modify a value when in update mode with different size")]
+    ModifySizeChange, // EXR_ERR_MODIFY_SIZE_CHANGE,
+    #[error("File in write mode, but header already written, can no longer edit attributes")]
+    AlreadyWroteAttributes, // EXR_ERR_ALREADY_WROTE_ATTRS,
+    #[error("Use deep scanline chunk writer with the sample count table arguments")]
+    UseScanDeepWrite, // EXR_ERR_USE_SCAN_DEEP_WRITE,
+    #[error("Use deep tile chunk writer with the sample count table arguments")]
+    UseTileDeepWrite, // EXR_ERR_USE_TILE_DEEP_WRITE,
+    #[error("Use non-deep scanline chunk writer with the sample count table arguments")]
+    UseScanNonDeepWrite, // EXR_ERR_USE_SCAN_NONDEEP_WRITE,
+    #[error("Use non-deep tile chunk writer with the sample count table arguments")]
+    UseTileNonDeepWrite, // EXR_ERR_USE_TILE_NONDEEP_WRITE,
+    #[error("Unkown error code")]
     Unknown,
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match *self {
-            Error::OutOfMemory => write!(f, "Unable to allocate memory"),
-            Error::InvalidArgument => write!(f, "Invalid argument to function"),
-            Error::FileAccess => write!(
-                f,
-                "Unable to open file (path does not exist or permission denied"
-            ),
-            Error::FileBadHeader => {
-                write!(f, "File is not an OpenEXR file or has a bad header")
-            }
-            Error::NotOpenRead => write!(f, "File not opened for read"),
-            Error::NotOpenWrite => write!(f, "File not opened for write"),
-            Error::ReadIo => write!(f, "Error reading from stream"),
-            Error::WriteIo => write!(f, "Error writing to stream"),
-            Error::NameTooLong => write!(f, "Text too long for file flags"),
-            Error::MissingReqAttr => {
-                write!(f, "Missing required attribute in part header")
-            }
-            Error::InvalidAttr => write!(f, "Invalid attribute in part header"),
-            Error::BadChunkData => {
-                write!(f, "Mismatch in chunk data vs programmatic value")
-            }
-            Error::TypeMismatch => write!(f, "Attribute type mismatch"),
-            Error::SizeMismatch => {
-                write!(f, "Attribute type vs. size mismatch")
-            }
-            Error::ScanTileMixedApi => write!(
-                f,
-                "Attempt to use a scanline accessor function for a tiled image"
-            ),
-            Error::TileScanMixedApi => write!(
-                f,
-                "Attempt to use a tiled accessor function for a scanline image"
-            ),
-            Error::Unknown => write!(f, "Unkown error code"),
-        }
-    }
-}
+pub type Chromaticities = exr_attr_chromaticities_t;
 
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
-    }
-}
+pub type Keycode = exr_attr_keycode_t;
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Chromaticities {
-    pub red_x: f32,
-    pub red_y: f32,
-    pub green_x: f32,
-    pub green_y: f32,
-    pub blue_x: f32,
-    pub blue_y: f32,
-    pub white_x: f32,
-    pub white_y: f32,
-}
-pub type exr_attr_chromaticities_t = Chromaticities;
+pub type Rational = exr_attr_rational_t;
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Keycode {
-    pub film_mfc_code: i32,
-    pub film_type: i32,
-    pub prefix: i32,
-    pub count: i32,
-    pub perf_offset: i32,
-    pub perfs_per_frame: i32,
-    pub perfs_per_count: i32,
-}
-pub type exr_attr_keycode_t = Keycode;
+pub type Timecode = exr_attr_timecode_t;
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Rational {
-    pub num: i32,
-    pub denom: u32,
-}
-pub type exr_attr_rational_t = Rational;
+pub type Tiledesc = exr_attr_tiledesc_t;
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Timecode {
-    pub time_and_flags: u32,
-    pub user_data: u32,
-}
-pub type exr_attr_timecode_t = Timecode;
+// #[repr(C)]
+// #[derive(Debug, Copy, Clone)]
+// pub struct ChannelDecodeInfo {
+//     channel_name: *const ::std::os::raw::c_char,
+//     pub height: ::std::os::raw::c_int,
+//     pub width: ::std::os::raw::c_int,
+//     pub bytes_per_pel: ::std::os::raw::c_int,
+//     pub x_samples: ::std::os::raw::c_int,
+//     pub y_samples: ::std::os::raw::c_int,
+//     data_ptr: Option<*mut u8>,
+//     pub output_pixel_stride: ::std::os::raw::c_int,
+//     pub output_line_stride: ::std::os::raw::c_int,
+// }
+// pub type exr_channel_decode_info_t = ChannelDecodeInfo;
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Tiledesc {
-    x_size: u32,
-    y_size: u32,
-    level_and_round: u8,
-}
-pub type exr_attr_tiledesc_t = Tiledesc;
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        println!(">>> max image width: {}", unsafe {
-            exr_get_maximum_image_width()
-        });
-        println!(">>> max image height: {}", unsafe {
-            exr_get_maximum_image_height()
-        });
-    }
-}
+// impl ChannelDecodeInfo {
+//     pub fn channel_name(&self) -> Result<&str, Error> {
+//         unsafe {
+//             match CStr::from_ptr(self.channel_name).to_str() {
+//                 Ok(name) => Ok(name),
+//                 // TODO: Improve error handling
+//                 Err(_) => Err(Error::Unknown),
+//             }
+//         }
+//     }
+// }

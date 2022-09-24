@@ -3,7 +3,7 @@ use openexr_core_sys as sys;
 pub use sys::{Chromaticities, Keycode, Rational, Timecode};
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CompressionType {
     None = 0,
     RLE = 1,
@@ -18,14 +18,14 @@ pub enum CompressionType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum EnvmapType {
     Latlong = 0,
     Cube,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum LineOrder {
     IncreasingY = 0,
     DecreasingY,
@@ -33,7 +33,7 @@ pub enum LineOrder {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum StorageType {
     Scanline = 0,
     Tiled,

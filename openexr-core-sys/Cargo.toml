@@ -8,5 +8,9 @@ build = "build.rs"
 name = "openexr_core_sys"
 path = "src/lib.rs"
 
+[dependencies]
+thiserror = "1.0.35"
+
 [build-dependencies]
-bindgen = "0.56.0"
+bindgen = "0.60.1"
+anyhow = "1.0.65"
