@@ -82,7 +82,7 @@ pub enum Error {
 
 impl exr_result_t {
     pub fn ok<T>(&self, val: T) -> Result<T, Error> {
-        match self.0 as u32 {
+        match self.0 {
             exr_error_code_t::EXR_ERR_SUCCESS => Ok(val),
             exr_error_code_t::EXR_ERR_OUT_OF_MEMORY => Err(Error::OutOfMemory),
             exr_error_code_t::EXR_ERR_MISSING_CONTEXT_ARG => {
