@@ -27,6 +27,9 @@ fn main() -> Result<()> {
         .header("wrapper.h")
         // generate newtypes for enums
         .default_enum_style(bindgen::EnumVariation::NewType { is_bitfield: false })
+        .size_t_is_usize(true)
+        // .default_alias_style(bindgen::AliasVariation::NewType)
+        .new_type_alias("exr_result_t")
         // we'll do these manually
         // .blacklist_type("exr_attr_chromaticities_t")
         // .blacklist_type("exr_attr_keycode_t")
@@ -43,9 +46,12 @@ fn main() -> Result<()> {
         .expect("Unable to generate bindings");
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src/bindings.rs");
+
+    // panic!("{:?}", out_path);
+
     bindings
-        .write_to_file(out_path.join("bindings.rs"))
+        .write_to_file(out_path)
         .expect("Couldn't write bindings!");
 
     Ok(())

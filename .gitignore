@@ -1,2 +1,4 @@
 target/
 .vscode/
+
+openexr-core-sys/src/bindings.rs

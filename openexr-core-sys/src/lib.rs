@@ -1,20 +1,30 @@
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(dead_code)]
+#[allow(non_upper_case_globals)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+mod bindings;
+
+pub use bindings::*;
 
 use thiserror::Error;
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+// impl exr_error_code_t {
+//     pub fn ok<T>(&self, value: T) -> Result<T, Error> {
+//         match *self {
+//             exr_error_code_t::EXR_ERR_SUCCESS => Ok(value),
+//             code => Err(code.into()),
+//         }
+//     }
+// }
 
-impl exr_error_code_t {
-    pub fn ok<T>(&self, value: T) -> Result<T, Error> {
-        match *self {
-            exr_error_code_t::EXR_ERR_SUCCESS => Ok(value),
-            code => Err(code.into()),
-        }
-    }
-}
+// impl exr_result_t {
+//     pub fn ok<T>(&self, value: T) -> Result<T, Error> {
+//         match self.0 {
+//             0 => Ok(value),
+//             code => Err((exr_error_code_t(code)).into()),
+//         }
+//     }
+// }
 
 impl From<exr_error_code_t> for Error {
     fn from(error_code: exr_error_code_t) -> Self {
@@ -24,7 +34,6 @@ impl From<exr_error_code_t> for Error {
             exr_error_code_t::EXR_ERR_INVALID_ARGUMENT => Error::InvalidArgument,
             exr_error_code_t::EXR_ERR_ARGUMENT_OUT_OF_RANGE => Error::ArgumentOutOfRange,
             exr_error_code_t::EXR_ERR_FILE_ACCESS => Error::FileAccess,
-            // exr_error_code_t::EXR_ERR_FILE_BAD_HEADER => Error::BadChunkData,
             exr_error_code_t::EXR_ERR_NOT_OPEN_READ => Error::NotOpenRead,
             exr_error_code_t::EXR_ERR_NOT_OPEN_WRITE => Error::NotOpenWrite,
             exr_error_code_t::EXR_ERR_HEADER_NOT_WRITTEN => Error::HeaderNotWritten,
@@ -34,15 +43,12 @@ impl From<exr_error_code_t> for Error {
             exr_error_code_t::EXR_ERR_MISSING_REQ_ATTR => Error::MissingReqAttr,
             exr_error_code_t::EXR_ERR_INVALID_ATTR => Error::InvalidAttr,
             exr_error_code_t::EXR_ERR_NO_ATTR_BY_NAME => Error::NoAttributeByName,
-            // exr_error_code_t::EXR_ERR_BAD_CHUNK_DATA => Error::BadChunkData,
             exr_error_code_t::EXR_ERR_ATTR_TYPE_MISMATCH => Error::AttributeTypeMismatch,
             exr_error_code_t::EXR_ERR_ATTR_SIZE_MISMATCH => Error::AttributeSizeMismatch,
             exr_error_code_t::EXR_ERR_SCAN_TILE_MIXEDAPI => Error::ScanTileMixedApi,
             exr_error_code_t::EXR_ERR_TILE_SCAN_MIXEDAPI => Error::TileScanMixedApi,
             exr_error_code_t::EXR_ERR_MODIFY_SIZE_CHANGE => Error::ModifySizeChange,
             exr_error_code_t::EXR_ERR_ALREADY_WROTE_ATTRS => Error::AlreadyWroteAttributes,
-            // exr_error_code_t::EXR_ERR_PART_NOT_READY => Error::PartNotReady,
-            // exr_error_code_t::EXR_ERR_CHUNK_NOT_READY => Error::ChunkNotReady,
             exr_error_code_t::EXR_ERR_USE_SCAN_DEEP_WRITE => Error::UseScanDeepWrite,
             exr_error_code_t::EXR_ERR_USE_TILE_DEEP_WRITE => Error::UseTileDeepWrite,
             exr_error_code_t::EXR_ERR_USE_SCAN_NONDEEP_WRITE => Error::UseScanNonDeepWrite,
@@ -71,15 +77,12 @@ impl From<Error> for exr_error_code_t {
             Error::MissingReqAttr => exr_error_code_t::EXR_ERR_MISSING_REQ_ATTR,
             Error::InvalidAttr => exr_error_code_t::EXR_ERR_INVALID_ATTR,
             Error::NoAttributeByName => exr_error_code_t::EXR_ERR_NO_ATTR_BY_NAME,
-            // Error::BadChunkData => exr_error_code_t::EXR_ERR_BAD_CHUNK_DATA,
             Error::AttributeTypeMismatch => exr_error_code_t::EXR_ERR_ATTR_TYPE_MISMATCH,
             Error::AttributeSizeMismatch => exr_error_code_t::EXR_ERR_ATTR_SIZE_MISMATCH,
             Error::ScanTileMixedApi => exr_error_code_t::EXR_ERR_SCAN_TILE_MIXEDAPI,
             Error::TileScanMixedApi => exr_error_code_t::EXR_ERR_TILE_SCAN_MIXEDAPI,
             Error::ModifySizeChange => exr_error_code_t::EXR_ERR_MODIFY_SIZE_CHANGE,
             Error::AlreadyWroteAttributes => exr_error_code_t::EXR_ERR_ALREADY_WROTE_ATTRS,
-            // Error::PartNotReady => exr_error_code_t::EXR_ERR_PART_NOT_READY,
-            // Error::ChunkNotReady => exr_error_code_t::EXR_ERR_CHUNK_NOT_READY,
             Error::UseScanDeepWrite => exr_error_code_t::EXR_ERR_USE_SCAN_DEEP_WRITE,
             Error::UseTileDeepWrite => exr_error_code_t::EXR_ERR_USE_TILE_DEEP_WRITE,
             Error::UseScanNonDeepWrite => exr_error_code_t::EXR_ERR_USE_SCAN_NONDEEP_WRITE,
@@ -90,9 +93,9 @@ impl From<Error> for exr_error_code_t {
 }
 
 impl From<Error> for exr_result_t {
-    fn from(error: Error) -> Self {
+    fn from(error: Error) -> exr_result_t {
         let error_code: exr_error_code_t = error.into();
-        error_code.0
+        exr_result_t(error_code.0)
     }
 }
 
@@ -163,30 +166,3 @@ pub type Rational = exr_attr_rational_t;
 pub type Timecode = exr_attr_timecode_t;
 
 pub type Tiledesc = exr_attr_tiledesc_t;
-
-// #[repr(C)]
-// #[derive(Debug, Copy, Clone)]
-// pub struct ChannelDecodeInfo {
-//     channel_name: *const ::std::os::raw::c_char,
-//     pub height: ::std::os::raw::c_int,
-//     pub width: ::std::os::raw::c_int,
-//     pub bytes_per_pel: ::std::os::raw::c_int,
-//     pub x_samples: ::std::os::raw::c_int,
-//     pub y_samples: ::std::os::raw::c_int,
-//     data_ptr: Option<*mut u8>,
-//     pub output_pixel_stride: ::std::os::raw::c_int,
-//     pub output_line_stride: ::std::os::raw::c_int,
-// }
-// pub type exr_channel_decode_info_t = ChannelDecodeInfo;
-
-// impl ChannelDecodeInfo {
-//     pub fn channel_name(&self) -> Result<&str, Error> {
-//         unsafe {
-//             match CStr::from_ptr(self.channel_name).to_str() {
-//                 Ok(name) => Ok(name),
-//                 // TODO: Improve error handling
-//                 Err(_) => Err(Error::Unknown),
-//             }
-//         }
-//     }
-// }

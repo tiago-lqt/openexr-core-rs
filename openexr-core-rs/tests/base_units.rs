@@ -1,7 +1,7 @@
 use openexr_core::*;
 
 #[test]
-fn test_base() {
+pub fn base() {
     let version = openexr_core::get_library_version();
 
     // Hardcoded constant from OpenEXR Core
@@ -18,22 +18,24 @@ fn test_base() {
 }
 
 #[test]
-fn test_base_errors() -> ExrResult<()> {
-    {
-        let error_msg = get_default_error_message(ExrError::OutOfMemory)?;
-        assert_ne!(error_msg, "");
-    }
+pub fn base_errors() -> ExrResult<()> {
+    todo!();
 
-    {
-        let error_msg = get_default_error_message(ExrError::Unknown)?;
-        assert_ne!(error_msg, "");
-    }
+    // {
+    //     let error_msg = get_default_error_message(ExrError::OutOfMemory)?;
+    //     assert_ne!(error_msg, "");
+    // }
 
-    Ok(())
+    // {
+    //     let error_msg = get_default_error_message(ExrError::Unknown)?;
+    //     assert_ne!(error_msg, "");
+    // }
+
+    // Ok(())
 }
 
 #[test]
-fn test_base_limits() {
+pub fn base_limits() {
     set_default_maximum_image_size(42, 42);
     let default_image_size = get_default_maximum_image_size();
     assert_eq!(
@@ -71,6 +73,6 @@ fn test_base_limits() {
 }
 
 #[test]
-fn test_base_debug() {
+pub fn base_debug() {
     // NOTE: Not applicable to rust
 }

@@ -41,6 +41,17 @@ pub enum StorageType {
     DeepTiled,
 }
 
+impl From<StorageType> for sys::exr_storage_t {
+    fn from(storage: StorageType) -> Self {
+        match storage {
+            StorageType::Scanline => sys::exr_storage_t::EXR_STORAGE_SCANLINE,
+            StorageType::Tiled => sys::exr_storage_t::EXR_STORAGE_TILED,
+            StorageType::DeepScanline => sys::exr_storage_t::EXR_STORAGE_DEEP_SCANLINE,
+            StorageType::DeepTiled => sys::exr_storage_t::EXR_STORAGE_DEEP_TILED,
+        }
+    }
+}
+
 cfg_if::cfg_if! {
     if #[cfg(feature="cgmath")] {
         pub type V2i = cgmath::Vector2<i32>;
