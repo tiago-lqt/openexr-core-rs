@@ -1,5 +1,2 @@
 [workspace]
-members = [
-    'openexr-core-sys',
-    'openexr-core-rs',
-]
+members = ['openexr-core-sys', 'openexr-core-rs', 'tools/exrinfo']
