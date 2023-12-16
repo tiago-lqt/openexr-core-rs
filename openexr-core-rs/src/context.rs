@@ -1,5 +1,12 @@
+use std::path::PathBuf;
+
 use bitflags::bitflags;
 use openexr_core_sys as sys;
+
+use crate::{
+    attributes::{Attribute, AttributesList, Storage},
+    ExrResult, Version,
+};
 
 pub trait ContextOptions {
     fn with_strict_header(self) -> Self;
@@ -25,10 +32,6 @@ bitflags! {
 }
 
 impl ContextFlags {
-    pub fn default() -> ContextFlags {
-        ContextFlags::NONE
-    }
-
     pub fn with_strict_header(self) -> ContextFlags {
         self | ContextFlags::STRICT_HEADER
     }
@@ -69,6 +72,51 @@ impl ContextFlags {
 
 impl Default for ContextFlags {
     fn default() -> Self {
-        ContextFlags::default()
+        ContextFlags::NONE
     }
+}
+
+pub trait Context {
+    type Part: ContextPart;
+    type PartIterator: IntoIterator<Item = Self::Part>;
+
+    fn file_name(&self) -> ExrResult<PathBuf>;
+
+    fn is_multipart(&self) -> ExrResult<bool>;
+
+    fn is_singlepart_tiled(&self) -> ExrResult<bool>;
+
+    fn has_longnames(&self) -> ExrResult<bool>;
+
+    fn has_nonimage_data(&self) -> ExrResult<bool>;
+
+    fn num_parts(&self) -> ExrResult<usize>;
+
+    fn parts(&self) -> Self::PartIterator;
+}
+
+pub trait ContextPart {
+    fn index(&self) -> ExrResult<usize>;
+
+    fn has_name(&self) -> ExrResult<bool>;
+
+    fn version(&self) -> ExrResult<u32>;
+
+    fn name(&self) -> ExrResult<Option<String>>;
+
+    fn has_attributes(&self) -> ExrResult<bool>;
+
+    fn attributes(&self) -> ExrResult<AttributesList>;
+
+    fn has_part_type(&self) -> ExrResult<bool>;
+
+    fn part_type(&self) -> ExrResult<Option<Attribute>>;
+
+    fn storage(&self) -> ExrResult<Storage>;
+
+    fn tile_levels(&self) -> ExrResult<usize>;
+
+    fn tile_sizes(&self, level_x: u32, level_y: u32) -> ExrResult<usize>;
+
+    fn chunk_count(&self, level_x: u32, level_y: u32) -> ExrResult<usize>;
 }

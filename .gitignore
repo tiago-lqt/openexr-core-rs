@@ -1,4 +1,4 @@
 target/
 .vscode/
 
-openexr-core-sys/src/bindings.rs
+openexr-core-sys/src/openexr_ffi.rs

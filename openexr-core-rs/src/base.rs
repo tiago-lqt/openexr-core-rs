@@ -1,5 +1,5 @@
 use openexr_core_sys as sys;
-use std::ffi::CStr;
+use std::{ffi::CStr, fmt::Display};
 
 use crate::ExrResult;
 
@@ -8,6 +8,18 @@ pub struct Version {
     pub minor: u32,
     pub patch: u32,
     pub extra: String,
+}
+
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
+
+        if !self.extra.is_empty() {
+            write!(f, "-{}", self.extra)?;
+        }
+
+        Ok(())
+    }
 }
 
 pub fn get_library_version() -> Version {

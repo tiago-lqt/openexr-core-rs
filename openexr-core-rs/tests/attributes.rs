@@ -1,11 +1,15 @@
-use openexr_core::{ExrError, ExrResult, Initializer, StorageType, WriteOptions, Writer};
+use openexr_core::attributes::StorageType;
+use openexr_core::{ExrResult, Initializer, WriteOptions, Writer};
 use openexr_core_sys as sys;
 
 #[test]
 pub fn attributes_strings() -> ExrResult<()> {
-    let context = create_dummy_file_writer("<string>")?;
+    let mut _context = create_dummy_file_writer("<string>")?;
 
-    string_helper(context);
+    // TODO: Revaluate test
+    // Test was copied from OpenEXR Core source but seems to be focused
+    // on internal components the sys lib does not expose
+    // string_helper(&mut context)?;
 
     Ok(())
 }
@@ -50,17 +54,23 @@ unsafe extern "C" fn failable_malloc(bytes: usize) -> *mut std::os::raw::c_void 
     ptr as *mut std::os::raw::c_void
 }
 
-fn string_helper(context: Writer) {
+fn string_helper(_context: &mut Writer) -> ExrResult<()> {
     // exr_attr_string_t s, nil = { 0 };
 
-    // EXRCORE_TEST_RVAL(exr_attr_string_init(f, &s, 4));
-    // EXRCORE_TEST(s.str != NULL);
-    // EXRCORE_TEST(s.length == 4);
-    // EXRCORE_TEST(s.alloc_size == 5);
-    // EXRCORE_TEST_RVAL(exr_attr_string_destroy(f, &s));
-    // EXRCORE_TEST(s.str == NULL);
-    // EXRCORE_TEST(s.length == 0);
-    // EXRCORE_TEST(s.alloc_size == 0);
+    {
+        // let s: AttrString = context.attr_string_init(4)?;
+
+        // assert!(s.str().is_empty());
+        // assert_eq!(s.length(), 4);
+        // assert_eq!(s.alloc_size(), 5);
+
+        // EXRCORE_TEST_RVAL(exr_attr_string_destroy(f, &s));
+        // EXRCORE_TEST(s.str == NULL);
+        // EXRCORE_TEST(s.length == 0);
+        // EXRCORE_TEST(s.alloc_size == 0);
+    }
+
+    {}
 
     // EXRCORE_TEST_RVAL_FAIL (        EXR_ERR_INVALID_ARGUMENT, exr_attr_string_create (f, NULL, "exr"));
     // EXRCORE_TEST_RVAL_FAIL (        EXR_ERR_MISSING_CONTEXT_ARG, exr_attr_string_create (NULL, &s, "exr"));

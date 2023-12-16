@@ -4,51 +4,54 @@ use std::{env, path::Path};
 
 fn main() -> Result<()> {
     let openexr_root = env::var("OPENEXR_ROOT").expect("'OPENEXR_ROOT' envvar is not defined");
+    let openexr_lib = Path::new(&openexr_root).join("lib");
+    let openexr_include = Path::new(&openexr_root).join("include");
 
-    let openexr_lib_path = Path::new(&openexr_root).join("lib");
-    let openexr_include_path = Path::new(&openexr_root).join("include").join("OpenEXR");
+    let openexr_lib_name = "OpenEXRCore-3_1";
 
-    // Tell cargo to tell rustc to link the OpenEXRCore .lib
-    println!("cargo:rustc-link-search={}", openexr_lib_path.display());
-
-    println!("cargo:rustc-link-lib=OpenEXRCore-3_1");
-    // println!("cargo:rustc-link-lib=static={}", "OpenEXRCore-2_5_static");
-
-    // Tell cargo to invalidate the built crate whenever the wrapper changes
+    println!("cargo:rustc-link-search={}", openexr_lib.display());
+    println!("cargo:rustc-link-lib={}", openexr_lib_name);
     println!("cargo:rerun-if-changed=wrapper.h");
 
-    // The bindgen::Builder is the main entry point
-    // to bindgen, and lets you build up options for
-    // the resulting bindings.
     let bindings = bindgen::Builder::default()
-        .clang_arg(format!("-F{}", openexr_include_path.display()))
-        // The input header we would like to generate
-        // bindings for.
-        .header("wrapper.h")
-        // generate newtypes for enums
-        .default_enum_style(bindgen::EnumVariation::NewType { is_bitfield: false })
+        .header("src/openexr_core_wrapper.h")
+        .clang_arg(format!("-I{}", openexr_include.display()))
+        .clang_arg(format!("-I{}/OpenEXR", openexr_include.display()))
         .size_t_is_usize(true)
-        // .default_alias_style(bindgen::AliasVariation::NewType)
+        .raw_line("use crate::*;")
+        .default_enum_style(bindgen::EnumVariation::NewType { is_bitfield: false })
+        .allowlist_recursively(false)
+        .allowlist_function("exr_.**")
+        .allowlist_type("exr_.*")
+        .allowlist_type("_priv_exr_.*")
+        .allowlist_type("_exr_.*")
+        .allowlist_type("transcoding_pipeline_buffer_id")
+        .allowlist_var("EXR_CONTEXT_.*")
+        .allowlist_var("OPENEXR_VERSION_.*")
         .new_type_alias("exr_result_t")
-        // we'll do these manually
-        // .blacklist_type("exr_attr_chromaticities_t")
-        // .blacklist_type("exr_attr_keycode_t")
-        // .blacklist_type("exr_attr_rational_t")
-        // .blacklist_type("exr_attr_timecode_t")
-        // .blacklist_type("exr_attr_tiledesc_t")
-        // .blacklist_type("exr_channel_decode_info_t")
-        // Tell cargo to invalidate the built crate whenever any of the
-        // included header files changed.
+        .blocklist_type("exr_attr_v2i_t")
+        .blocklist_type("exr_attr_v2f_t")
+        .blocklist_type("exr_attr_v2d_t")
+        .blocklist_type("exr_attr_v3i_t")
+        .blocklist_type("exr_attr_v3f_t")
+        .blocklist_type("exr_attr_v3d_t")
+        .rustified_enum("exr_error_code_t")
+        .newtype_enum("exr_default_write_mode")
+        .newtype_enum("exr_attr_list_access_mode")
+        .newtype_enum("exr_storage_t")
+        .newtype_enum("exr_compression_t")
+        .newtype_enum("exr_envmap_t")
+        .newtype_enum("exr_lineorder_t")
+        .newtype_enum("exr_tile_level_mode_t")
+        .newtype_enum("exr_tile_round_mode_t")
+        .newtype_enum("exr_pixel_type_t")
+        .rustfmt_bindings(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        // Finish the builder and generate the bindings.
         .generate()
-        // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings");
 
-    // Write the bindings to the $OUT_DIR/bindings.rs file.
-    let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src/bindings.rs");
-
-    // panic!("{:?}", out_path);
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let out_path = PathBuf::from(manifest_dir).join("src/openexr_ffi.rs");
 
     bindings
         .write_to_file(out_path)

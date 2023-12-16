@@ -1,6 +1,7 @@
-use crate::ContextFlags;
+use crate::context::ContextFlags;
 use openexr_core_sys as sys;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Initializer {
     // TODO: Research support for user data
     // pub user_data: *const c_void,
@@ -21,7 +22,74 @@ pub struct Initializer {
 }
 
 impl Initializer {
-    pub fn default() -> Initializer {
+    pub fn with_error_handler(
+        mut self,
+        error_callback: sys::exr_error_handler_cb_t,
+    ) -> Initializer {
+        self.error_handler_fn = error_callback;
+        self
+    }
+    pub fn without_error_handler(mut self) -> Initializer {
+        self.error_handler_fn = None;
+        self
+    }
+
+    pub fn with_write_function(mut self, write_function: sys::exr_write_func_ptr_t) -> Self {
+        self.write_fn = write_function;
+        self
+    }
+
+    pub fn without_write_function(mut self) -> Self {
+        self.write_fn = None;
+        self
+    }
+
+    pub fn with_alloc_function(
+        mut self,
+        alloc_function: sys::exr_memory_allocation_func_t,
+    ) -> Self {
+        self.alloc_fn = alloc_function;
+        self
+    }
+
+    pub fn without_alloc_function(mut self) -> Self {
+        self.alloc_fn = None;
+        self
+    }
+
+    pub fn with_strict_header(mut self) -> Self {
+        self.flags |= ContextFlags::STRICT_HEADER;
+        self
+    }
+
+    pub fn without_strict_header(mut self) -> Self {
+        self.flags &= !ContextFlags::STRICT_HEADER;
+        self
+    }
+
+    pub fn with_silent_header_parse(mut self) -> Self {
+        self.flags |= ContextFlags::SILENT_HEADER_PARSE;
+        self
+    }
+
+    pub fn without_silent_header_parse(mut self) -> Self {
+        self.flags &= !ContextFlags::SILENT_HEADER_PARSE;
+        self
+    }
+
+    pub fn with_disable_chunk_reconstruction(mut self) -> Self {
+        self.flags |= ContextFlags::DISABLE_CHUNK_RECONSTRUCTION;
+        self
+    }
+
+    pub fn without_disable_chunk_reconstruction(mut self) -> Self {
+        self.flags &= !ContextFlags::DISABLE_CHUNK_RECONSTRUCTION;
+        self
+    }
+}
+
+impl Default for Initializer {
+    fn default() -> Self {
         Initializer {
             error_handler_fn: None,
             alloc_fn: None,
@@ -38,33 +106,6 @@ impl Initializer {
             dwa_quality: -1.0,
             flags: ContextFlags::NONE,
         }
-    }
-
-    pub fn with_error_handler(
-        mut self,
-        error_callback: sys::exr_error_handler_cb_t,
-    ) -> Initializer {
-        self.error_handler_fn = error_callback;
-        self
-    }
-
-    pub fn with_write_function(mut self, write_function: sys::exr_write_func_ptr_t) -> Self {
-        self.write_fn = write_function;
-        self
-    }
-
-    pub fn with_alloc_function(
-        mut self,
-        alloc_function: sys::exr_memory_allocation_func_t,
-    ) -> Self {
-        self.alloc_fn = alloc_function;
-        self
-    }
-}
-
-impl Default for Initializer {
-    fn default() -> Self {
-        Self::default()
     }
 }
 

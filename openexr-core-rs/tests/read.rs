@@ -1,48 +1,242 @@
 #![feature(c_variadic)]
+#![feature(assert_matches)]
+
+mod shared;
 
 use anyhow::Result;
-use openexr_core::Initializer;
+
+use exr::{attributes::Storage, context::Context, context::ContextPart};
+use openexr_core as exr;
 use openexr_core_sys as sys;
-use std::{env, os::raw::c_char, path::PathBuf};
+
+use openexr_core::{ExrError, ExrResult, Initializer, ReadOptions};
+use std::{assert_matches::assert_matches, os::raw::c_char};
 
 #[test]
-fn read_bad_args() -> Result<()> {
-    todo!()
+fn read_scanline() -> Result<(), Box<dyn std::error::Error>> {
+    let path_ferris = shared::get_test_file_path("ferris.exr");
+
+    let reader = exr::Reader::read(&path_ferris)?;
+    assert_eq!(reader.file_name()?, path_ferris);
+
+    assert_eq!(reader.count()?, 1);
+    assert_eq!(reader.name(0)?, None);
+    assert_eq!(reader.storage(0)?, Storage::Scanline);
+    assert_eq!(reader.tile_levels(0), Err(exr::Error::TileScanMixedApi));
+    assert_eq!(
+        reader.tile_sizes(0, 0, 0),
+        Err(exr::Error::TileScanMixedApi)
+    );
+
+    let chunk_count = reader.chunk_count(0)?;
+    let scanlines_per_chunk = reader.scanlines_per_chunk(0)?;
+    let chunk_unpacked_size = reader.chunk_unpacked_size(0)?;
+
+    let attr_count = reader.attribute_count(0)?;
+    assert_eq!(attr_count, 8);
+
+    for i in 0..attr_count {
+        let attr = reader.get_attribute_by_index(0, AttrListAccessMode::FileOrder, i)?;
+        println!("Attribute {} - {}", i, attr.name());
+    }
+
+    // let attr_channels = reader.get_attribute_by_name(0, "channels")?;
+
+    // assert_eq!(reader.get_attribute::<f32>(0, "screenWindowWidth")?, 1.0f32);
+    // assert_eq!(
+    //     reader.get_attribute::<exr::attr::Compression>(0, "compression")?,
+    //     exr::attr::Compression::Piz
+    // );
+
+    // let dw = [0, 0, 1199, 799];
+    // assert_eq!(reader.get_attribute::<[i32; 4]>(0, "dataWindow")?, dw);
+    // assert_eq!(reader.get_attribute::<[i32; 4]>(0, "displayWindow")?, dw);
+
+    // assert_eq!(reader.data_window::<[i32; 4]>(0)?, dw);
+    // assert_eq!(reader.display_window::<[i32; 4]>(0)?, dw);
+
+    // assert_eq!(reader.lineorder(0)?, exr::attr::LineOrder::IncreasingY);
+
+    // assert_eq!(reader.pixel_aspect_ratio(0)?, 1.0f32);
+    // assert_eq!(reader.screen_window_width(0)?, 1.0f32);
+    // assert_eq!(reader.screen_window_center::<[f32; 2]>(0)?, [0.0, 0.0]);
+
+    // let width = dw.width() as usize + 1;
+    // let height = dw.height() as usize + 1;
+
+    // let channels_to_read = ["R", "G", "B", "A"];
+    // let nchan = channels_to_read.len();
+    // let channel_bytes = 2;
+    // let pixel_bytes = channels_to_read.len() * channel_bytes;
+    // let scanline_bytes = pixel_bytes * width;
+
+    // let num_chunk_lines = scanlines_per_chunk * chunk_count;
+
+    // // we need to make the storage big enough to hold all chunks, then we'll
+    // // truncate at the end. Alternative would be to allocate a chunk-sized
+    // // buffer and copy into the result vec as each chunk is decoded
+    // let mut pixel_data = vec![f16::from_f32(0.5); width * num_chunk_lines * nchan];
+
+    // println!("width: {}, height: {}", width, height);
+
+    // let mut chunk_scanline_start = 0;
+    // let mut chunk_scanline_end = scanlines_per_chunk;
+
+    // let chunk_info = reader.read_scanline_chunk_info(0, chunk_scanline_start as i32)?;
+    // let mut decoder = exr::decode::DecodePipeline::default();
+
+    // reader.decoding_initialize(0, &chunk_info, &mut decoder)?;
+
+    // while chunk_scanline_end <= num_chunk_lines {
+    //     let pixel_ptr = pixel_data
+    //         [chunk_scanline_start * width * nchan..chunk_scanline_end * width * nchan]
+    //         .as_mut_ptr();
+
+    //     let chunk_info = reader.read_scanline_chunk_info(0, chunk_scanline_start as i32)?;
+
+    //     reader.decoding_update(0, &chunk_info, &mut decoder)?;
+
+    //     let mut chan_offset = 0;
+    //     for req_chan_name in &channels_to_read {
+    //         for decode_channel in decoder.channels_mut() {
+    //             if decode_channel.name() == *req_chan_name {
+    //                 unsafe {
+    //                     decode_channel.set_decode_to(pixel_ptr.offset(chan_offset) as *mut u8);
+    //                 }
+
+    //                 decode_channel.set_user_bytes_per_element(2);
+    //                 decode_channel.set_user_pixel_stride(pixel_bytes);
+    //                 decode_channel.set_user_line_stride(scanline_bytes);
+    //                 chan_offset += 1;
+    //             }
+    //         }
+    //     }
+
+    //     reader.decoding_choose_default_routines(0, &mut decoder)?;
+    //     unsafe { reader.decoding_run(0, &mut decoder)? };
+
+    //     chunk_scanline_start += scanlines_per_chunk;
+    //     chunk_scanline_end += scanlines_per_chunk;
+    // }
+
+    // // finished with the decoder, clean up
+    // reader.decoding_destroy(decoder)?;
+
+    // // now truncate the pixels to the correct length and convert to u8
+    // // to write out a png for comparison
+    // let png_data = pixel_data
+    //     .into_iter()
+    //     .take(width * height * nchan)
+    //     .map(|c| (f32::from(c) * 255.0).floor() as u8)
+    //     .collect::<Vec<_>>();
+
+    // let f = std::fs::File::create("read_scanline.png")?;
+    // let ref mut w = std::io::BufWriter::new(f);
+    // let mut encoder = png::Encoder::new(w, width as u32, height as u32);
+    // encoder.set_color(png::ColorType::RGBA);
+    // encoder.set_depth(png::BitDepth::Eight);
+    // let mut writer = encoder.write_header()?;
+    // writer.write_image_data(&png_data)?;
+
+    // todo!();
+
+    Ok(())
 }
 
 #[test]
-fn read_bad_files() -> Result<()> {
-    todo!()
+fn read_bad_args() -> ExrResult<()> {
+    // exr_context_t             f;
+    // std::string               fn;
+    // exr_context_initializer_t cinit = EXR_DEFAULT_CONTEXT_INITIALIZER;
+    // cinit.error_handler_fn          = &err_cb;
+
+    let init = Initializer::default().with_error_handler(Some(error_callback));
+
+    let _options = ReadOptions::default();
+
+    // exr_start_write(&f, test, EXR_WRITE_FILE_DIRECTLY, &cinit);
+    // let mut writer = openexr_core::Reader::start_with_init_and_options("<string>", init, options)?;
+
+    // openexr_core::set_default_memory_routines(Some(failable_malloc), Some(failable_free))?;
+
+    {
+        // EXRCORE_TEST_RVAL_FAIL (
+        //     EXR_ERR_INVALID_ARGUMENT, exr_start_read (NULL, fn.c_str (), NULL));
+
+        let res = openexr_core::Reader::read_with_init("", init);
+        assert_matches!(res, Err(ExrError::InvalidArgument));
+    }
+
+    // EXRCORE_TEST_RVAL_FAIL (
+    //     EXR_ERR_INVALID_ARGUMENT, exr_start_read (&f, NULL, NULL));
+
+    // EXRCORE_TEST_RVAL_FAIL (
+    //     EXR_ERR_INVALID_ARGUMENT, exr_start_read (&f, NULL, &cinit));
+
+    // EXRCORE_TEST_RVAL_FAIL (
+    //     EXR_ERR_INVALID_ARGUMENT, exr_start_read (&f, "", &cinit));
+
+    //     // windows fails on directory open, where under unix you can open
+    //     // the directory as a file handle but not read from it
+    // #ifdef _WIN32
+    //     EXRCORE_TEST_RVAL_FAIL (
+    //         EXR_ERR_FILE_ACCESS, exr_start_read (&f, fn.c_str (), &cinit));
+    // #else
+    //     EXRCORE_TEST_RVAL_FAIL (
+    //         EXR_ERR_READ_IO, exr_start_read (&f, fn.c_str (), &cinit));
+    // #endif
+
+    //     fn.append ("invalid.exr");
+    //     EXRCORE_TEST_RVAL_FAIL (
+    //         EXR_ERR_FILE_ACCESS, exr_start_read (&f, fn.c_str (), &cinit));
+
+    //     EXRCORE_TEST_RVAL_FAIL_MALLOC (
+    //         EXR_ERR_OUT_OF_MEMORY, exr_start_read (&f, fn.c_str (), &cinit));
+
+    openexr_core::reset_default_memory_routines()?;
+
+    Ok(())
 }
 
-#[test]
-fn read_meta() -> Result<()> {
-    todo!()
-}
+// TODO
+// #[test]
+// fn read_bad_files() -> Result<()> {
+//     todo!()
+// }
+
+// TODO
+// #[test]
+// fn read_meta() -> Result<()> {
+//     todo!()
+// }
+
+// TODO
+// #[test]
+// fn open_scans() -> Result<()> {
+//     todo!()
+// }
+
+// TODO
+// #[test]
+// fn open_tiles() -> Result<()> {
+//     todo!()
+// }
+
+// TODO
+// #[test]
+// fn open_multi_part() -> Result<()> {
+//     todo!()
+// }
+
+// TODO
+// #[test]
+// fn open_deep() -> Result<()> {
+//     todo!()
+// }
 
 #[test]
-fn open_scans() -> Result<()> {
-    todo!()
-}
-
-#[test]
-fn open_tiles() -> Result<()> {
-    todo!()
-}
-
-#[test]
-fn open_multi_part() -> Result<()> {
-    todo!()
-}
-
-#[test]
-fn open_deep() -> Result<()> {
-    todo!()
-}
-
-#[test]
-fn read_scans() -> Result<()> {
-    let file_name = get_test_file_path("v1.7.test.interleaved.exr")?;
+fn read_scans() -> ExrResult<()> {
+    let file_name = shared::get_test_file_path("v1.7.test.interleaved.exr");
 
     // exr_context_t             f;
     // exr_context_initializer_t cinit = EXR_DEFAULT_CONTEXT_INITIALIZER;
@@ -51,7 +245,7 @@ fn read_scans() -> Result<()> {
     let init = Initializer::default().with_error_handler(Some(error_callback));
 
     // EXRCORE_TEST_RVAL(exr_start_read(&f, file_name.c_str(), &cinit));
-    let _read_context = openexr_core::start_read_with_initializer(file_name, init);
+    let _context = openexr_core::Reader::read_with_init(file_name, init)?;
 
     // int32_t ccount;
     // EXRCORE_TEST_RVAL_FAIL (
@@ -192,29 +386,23 @@ fn read_scans() -> Result<()> {
     todo!()
 }
 
-#[test]
-fn read_tiles() -> Result<()> {
-    todo!()
-}
+// TODO
+// #[test]
+// fn read_tiles() -> Result<()> {
+//     todo!()
+// }
 
-#[test]
-fn read_multi_part() -> Result<()> {
-    todo!()
-}
+// TODO
+// #[test]
+// fn read_multi_part() -> Result<()> {
+//     todo!()
+// }
 
-#[test]
-fn read_unpack() -> Result<()> {
-    todo!()
-}
-
-fn get_test_file_path(file_name: &str) -> anyhow::Result<PathBuf> {
-    let test_image_dir = env::var("TEST_IMAGE_DIR")?;
-
-    std::path::Path::new(&test_image_dir)
-        .join(file_name)
-        .canonicalize()
-        .map_err(|err| err.into())
-}
+// TODO
+// #[test]
+// fn read_unpack() -> Result<()> {
+//     todo!()
+// }
 
 unsafe extern "C" fn error_callback(
     _context: sys::exr_const_context_t,

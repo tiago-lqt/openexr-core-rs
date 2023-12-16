@@ -1,4 +1,4 @@
-use openexr_core::ContextFlags;
+use openexr_core::context::ContextFlags;
 
 #[test]
 fn test_context_flags_with_none() {

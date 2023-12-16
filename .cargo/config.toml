@@ -1,0 +1,2 @@
+[target."cfg(all())"]
+rustflags = ["-A", "clippy::expect_fun_call", "-A", "dead_code"]

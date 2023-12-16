@@ -1,14 +1,15 @@
-use crate::ContextFlags;
-use crate::ContextOptions;
+use crate::attributes::StorageType;
+use crate::context::ContextFlags;
+use crate::context::ContextOptions;
 use crate::ExrError;
 use crate::ExrResult;
 use crate::Initializer;
 use crate::OkResult;
-use crate::StorageType;
+
 use openexr_core_sys as sys;
+
 use std::ffi::CString;
 use std::path::Path;
-pub use sys::Error;
 
 #[derive(Debug, Clone, Copy)]
 pub enum WriteMode {
@@ -31,13 +32,6 @@ pub struct WriteOptions {
 }
 
 impl WriteOptions {
-    pub fn default() -> WriteOptions {
-        WriteOptions {
-            mode: WriteMode::Directly,
-            context_flags: ContextFlags::default(),
-        }
-    }
-
     pub fn with_write_directly(mut self) -> WriteOptions {
         self.mode = WriteMode::Directly;
         self
@@ -46,6 +40,15 @@ impl WriteOptions {
     pub fn with_write_temp_file(mut self) -> WriteOptions {
         self.mode = WriteMode::TempFile;
         self
+    }
+}
+
+impl Default for WriteOptions {
+    fn default() -> Self {
+        WriteOptions {
+            mode: WriteMode::Directly,
+            context_flags: ContextFlags::default(),
+        }
     }
 }
 
@@ -66,7 +69,7 @@ impl Writer {
         self.context
     }
 
-    pub fn start(_filename: &str, _use_temp_file: bool) -> ExrResult<Writer> {
+    pub fn start(_filename: &str) -> ExrResult<Writer> {
         todo!()
         // let filename = CString::new(filename).unwrap();
         // let mut file = std::ptr::null_mut();
@@ -90,7 +93,8 @@ impl Writer {
 
         let path = file_name.as_ref().to_str().unwrap_or_default();
 
-        let filename = CString::new(path).map_err(Into::<ExrError>::into)?;
+        // TODO: Figure out better way to handle this error
+        let filename = CString::new(path).map_err(|_| ExrError::FileAccess)?;
 
         let default_mode = options.mode.into();
 
@@ -114,7 +118,7 @@ impl Writer {
         let mut new_index = 0;
 
         unsafe {
-            let part_name = CString::new(part_name.as_ref())?;
+            let part_name = CString::new(part_name.as_ref()).map_err(|_| ExrError::FileAccess)?;
 
             sys::exr_add_part(
                 self.context,

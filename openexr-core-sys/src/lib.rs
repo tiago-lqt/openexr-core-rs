@@ -2,29 +2,13 @@
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-mod bindings;
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[allow(clippy::missing_safety_doc)]
+mod openexr_ffi;
 
-pub use bindings::*;
+pub use openexr_ffi::*;
 
 use thiserror::Error;
-
-// impl exr_error_code_t {
-//     pub fn ok<T>(&self, value: T) -> Result<T, Error> {
-//         match *self {
-//             exr_error_code_t::EXR_ERR_SUCCESS => Ok(value),
-//             code => Err(code.into()),
-//         }
-//     }
-// }
-
-// impl exr_result_t {
-//     pub fn ok<T>(&self, value: T) -> Result<T, Error> {
-//         match self.0 {
-//             0 => Ok(value),
-//             code => Err((exr_error_code_t(code)).into()),
-//         }
-//     }
-// }
 
 impl From<exr_error_code_t> for Error {
     fn from(error_code: exr_error_code_t) -> Self {
@@ -95,7 +79,7 @@ impl From<Error> for exr_error_code_t {
 impl From<Error> for exr_result_t {
     fn from(error: Error) -> exr_result_t {
         let error_code: exr_error_code_t = error.into();
-        exr_result_t(error_code.0)
+        exr_result_t(error_code as i32)
     }
 }
 
@@ -157,12 +141,78 @@ pub enum Error {
     Unknown,
 }
 
-pub type Chromaticities = exr_attr_chromaticities_t;
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
+#[repr(C, packed)]
+pub struct exr_attr_v2i_t {
+    x: i32,
+    y: i32,
+}
 
-pub type Keycode = exr_attr_keycode_t;
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[repr(C, packed)]
+pub struct exr_attr_v2f_t {
+    x: f32,
+    y: f32,
+}
 
-pub type Rational = exr_attr_rational_t;
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[repr(C, packed)]
+pub struct exr_attr_v2d_t {
+    x: f64,
+    y: f64,
+}
 
-pub type Timecode = exr_attr_timecode_t;
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
+#[repr(C, packed)]
+pub struct exr_attr_v3i_t {
+    x: i32,
+    y: i32,
+    z: i32,
+}
 
-pub type Tiledesc = exr_attr_tiledesc_t;
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[repr(C, packed)]
+pub struct exr_attr_v3f_t {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[repr(C, packed)]
+pub struct exr_attr_v3d_t {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+
+impl exr_error_code_t {
+    pub fn from_value(value: i32) -> exr_error_code_t {
+        match value {
+            0 => exr_error_code_t::EXR_ERR_SUCCESS,
+            value if value > 1 && value < 31 => unsafe { std::mem::transmute(value) },
+            _ => exr_error_code_t::EXR_ERR_UNKNOWN,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate as sys;
+
+    #[test]
+    fn it_works() {
+        let mut major = 0;
+        let mut minor = 0;
+        let mut patch = 0;
+        let mut extra = std::ptr::null();
+
+        unsafe {
+            sys::exr_get_library_version(&mut major, &mut minor, &mut patch, &mut extra);
+        }
+
+        assert_eq!(major, 3);
+        assert_eq!(minor, 1);
+        assert_eq!(patch, 0);
+    }
+}
