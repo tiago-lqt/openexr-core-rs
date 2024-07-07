@@ -1,7 +1,7 @@
 use crate::context::ContextFlags;
 use openexr_core_sys as sys;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Initializer {
     // TODO: Research support for user data
     // pub user_data: *const c_void,
@@ -129,6 +129,7 @@ impl From<Initializer> for sys::exr_context_initializer_t {
             zip_level: init.zip_level,
             dwa_quality: init.dwa_quality,
             flags: 0,
+            pad: [0; 4],
         }
     }
 }

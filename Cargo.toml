@@ -1,2 +1,14 @@
 [workspace]
-members = ['openexr-core-sys', 'openexr-core-rs', 'tools/exrinfo']
+members = ['openexr-core-sys', 'openexr-core-rs', 'tools/*']
+resolver = "2"
+
+[workspace.dependencies]
+thiserror = "1.0.35"
+bindgen = "0.69.4"
+anyhow = "1.0.65"
+cfg-if = "1.0.0"
+bitflags = "2.5.0"
+cgmath = "0.18.0"
+nalgebra-glm = "0.18.0"
+png = "0.17.7"
+project-root = "0.2.2"

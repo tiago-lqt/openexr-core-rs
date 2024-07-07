@@ -23,6 +23,7 @@ pub trait ContextOptions {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ContextFlags: u32 {
         const NONE = 0;
         const STRICT_HEADER = sys::EXR_CONTEXT_FLAG_STRICT_HEADER;

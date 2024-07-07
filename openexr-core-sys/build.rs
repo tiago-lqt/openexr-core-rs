@@ -1,13 +1,16 @@
 use anyhow::Result;
+use std::env;
 use std::path::PathBuf;
-use std::{env, path::Path};
 
 fn main() -> Result<()> {
-    let openexr_root = env::var("OPENEXR_ROOT").expect("'OPENEXR_ROOT' envvar is not defined");
-    let openexr_lib = Path::new(&openexr_root).join("lib");
-    let openexr_include = Path::new(&openexr_root).join("include");
+    let openexr_root: PathBuf = env::var("OPENEXR_ROOT")
+        .expect("'OPENEXR_ROOT' envvar is not defined")
+        .into();
 
-    let openexr_lib_name = "OpenEXRCore-3_1";
+    let openexr_lib = openexr_root.join("lib");
+    let openexr_include = openexr_root.join("include");
+
+    let openexr_lib_name = "OpenEXRCore";
 
     println!("cargo:rustc-link-search={}", openexr_lib.display());
     println!("cargo:rustc-link-lib={}", openexr_lib_name);
@@ -17,9 +20,13 @@ fn main() -> Result<()> {
         .header("src/openexr_core_wrapper.h")
         .clang_arg(format!("-I{}", openexr_include.display()))
         .clang_arg(format!("-I{}/OpenEXR", openexr_include.display()))
+        .clang_arg(format!("-I{}/Imath", openexr_include.display()))
         .size_t_is_usize(true)
         .raw_line("use crate::*;")
-        .default_enum_style(bindgen::EnumVariation::NewType { is_bitfield: false })
+        .default_enum_style(bindgen::EnumVariation::NewType {
+            is_global: false,
+            is_bitfield: false,
+        })
         .allowlist_recursively(false)
         .allowlist_function("exr_.**")
         .allowlist_type("exr_.*")
@@ -29,6 +36,7 @@ fn main() -> Result<()> {
         .allowlist_var("EXR_CONTEXT_.*")
         .allowlist_var("OPENEXR_VERSION_.*")
         .new_type_alias("exr_result_t")
+        .blocklist_type("exr_attr_*")
         .blocklist_type("exr_attr_v2i_t")
         .blocklist_type("exr_attr_v2f_t")
         .blocklist_type("exr_attr_v2d_t")
@@ -45,8 +53,8 @@ fn main() -> Result<()> {
         .newtype_enum("exr_tile_level_mode_t")
         .newtype_enum("exr_tile_round_mode_t")
         .newtype_enum("exr_pixel_type_t")
-        .rustfmt_bindings(true)
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        // .rustfmt_bindings(true)
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate bindings");
 

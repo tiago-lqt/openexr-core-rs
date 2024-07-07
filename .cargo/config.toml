@@ -1,2 +1,5 @@
 [target."cfg(all())"]
 rustflags = ["-A", "clippy::expect_fun_call", "-A", "dead_code"]
+
+[env]
+OPENEXR_ROOT = { value = "vendor\\OpenEXRCore\\v3.2.4", relative = true }
