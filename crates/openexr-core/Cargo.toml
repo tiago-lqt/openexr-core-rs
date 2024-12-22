@@ -1,0 +1,19 @@
+[package]
+name = "openexr-core"
+version = "0.1.0"
+authors = ["Anders Langlands <anderslanglands@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+openexr-core-sys = { path = "../openexr-core-sys" }
+anyhow.workspace = true
+cfg-if.workspace = true
+cgmath = { optional = true, workspace = true }
+nalgebra-glm = { optional = true, workspace = true }
+thiserror.workspace = true
+bitflags.workspace = true
+
+[dev-dependencies]
+png.workspace = true
+project-root.workspace = true
+assert_matches = "1.5.0"

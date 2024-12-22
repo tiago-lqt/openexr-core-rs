@@ -1,4 +1,4 @@
 target/
-.vscode/
-
+vendor/
 openexr-core-sys/src/openexr_ffi.rs
+__pycache__

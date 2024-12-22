@@ -2,4 +2,5 @@
 rustflags = ["-A", "clippy::expect_fun_call", "-A", "dead_code"]
 
 [env]
-OPENEXR_ROOT = { value = "vendor\\OpenEXRCore\\v3.2.4", relative = true }
+OPENEXR_ROOT = { value = "vendor/openexr/v3.3.2", relative = true }
+WORKSPACE_DEV_ENV = "true"

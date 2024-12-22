@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-openexr-core = { path = "../../openexr-core-rs" }
+openexr-core = { path = "../../crates/openexr-core" }
 clap = { version = "4.0.26", features = ["derive"] }
 anyhow = "1.0.66"
 dunce = "1.0.3"

@@ -1,5 +1,5 @@
 [workspace]
-members = ['openexr-core-sys', 'openexr-core-rs', 'tools/*']
+members = ['crates/openexr-core-sys', 'crates/openexr-core', 'tools/*']
 resolver = "2"
 
 [workspace.dependencies]

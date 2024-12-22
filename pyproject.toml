@@ -1,0 +1,16 @@
+[project]
+name = "openexr-core-rs"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["exr-func-parser", "pyright>=1.1.390", "ruff>=0.8.2"]
+
+[tool.uv.sources]
+exr-func-parser = { workspace = true }
+
+[tool.uv.workspace]
+members = ["python/exr-func-parser"]
+
+[tool.pylint]
+ignore = ["CVS"]
+disable = ["C0116", "C0115", "C0114"]
+max-line-length = 120

@@ -3,12 +3,13 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use clap::Parser;
 
-use exr::{
-    attributes::Attribute,
-    context::{Context, ContextPart},
-    PartReader,
+use exr::attributes::Attribute;
+use openexr_core::{
+    self as exr,
+    contexts::{
+        initializer::ContextInitializer, reader::ReaderContext, traits::Context,
+    },
 };
-use openexr_core as exr;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -29,8 +30,6 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let cwd = std::env::current_dir()?;
-
     for file in args.files {
         let path = dunce::canonicalize(PathBuf::from(&file))?;
 
@@ -40,10 +39,15 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn process_file(path: &Path, verbose: bool, strict: bool, all_metadata: bool) -> Result<()> {
+fn process_file(
+    path: &Path,
+    verbose: bool,
+    strict: bool,
+    all_metadata: bool,
+) -> Result<()> {
     println!("{}", path.as_os_str().to_string_lossy());
 
-    let mut init = exr::Initializer::default();
+    let mut init = ContextInitializer::default();
 
     if strict {
         init = init.with_strict_header();
@@ -53,16 +57,14 @@ fn process_file(path: &Path, verbose: bool, strict: bool, all_metadata: bool) ->
         init = init.with_silent_header_parse();
     }
 
-    let reader = exr::Reader::read_with_init(path, init)?;
+    let reader = exr::read_with_init(path, init)?;
 
     print_header_info(reader, strict || all_metadata)?;
 
     Ok(())
 }
 
-fn print_header_info(reader: exr::Reader, verbose: bool) -> Result<()> {
-    let is_multiplart = reader.is_multipart()?;
-
+fn print_header_info(reader: ReaderContext, verbose: bool) -> Result<()> {
     println!(
         "File '{}':",
         reader.file_name()?.as_os_str().to_string_lossy()
@@ -156,6 +158,6 @@ fn print_header_info(reader: exr::Reader, verbose: bool) -> Result<()> {
 //     Ok(())
 // }
 
-fn print_attr(attribute: Attribute, verbose: bool) -> Result<()> {
+fn print_attr(_attr: Attribute, _verbose: bool) -> Result<()> {
     todo!()
 }

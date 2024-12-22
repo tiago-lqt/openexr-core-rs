@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "[Tools] Parse Headers",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/python/parse_headers.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+        },
+        {
+            "name": "[Tools] Exr Info",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/exrinfo.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "RUST_BACKTRACE",
+                    "value": "1"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "cargo build",
+            "sourceFileMap": {
+                "/rustc/f6e511eec7342f59a25f7c0534f1dbea00d01b14": "${env:USERPROFILE}\\.rustup\\toolchains\\stable-x86_64-pc-windows-msvc\\lib\\rustlib\\src\\rust"
+            }
+        },
+    ]
+}
